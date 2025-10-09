@@ -58,3 +58,19 @@ resource "digitalocean_droplet" "update_checker_server" {
     "terraform-managed"
   ]
 }
+
+resource "digitalocean_droplet" "private_github_runner" {
+  count         = var.private_github_runner_count
+  name          = "rethinkdb-private-github-runner-${count.index}"
+  image         = local.default_droplet_image
+  region        = var.digitalocean_region
+  ssh_keys      = local.default_ssh_keys
+  size          = "s-4vcpu-8gb"
+  droplet_agent = true
+  monitoring    = true
+  backups       = false
+  tags = [
+    "build-and-test",
+    "terraform-managed"
+  ]
+}
