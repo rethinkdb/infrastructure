@@ -17,11 +17,10 @@ terraform {
     region                      = "us-east-1"
   }
 
-
   required_providers {
     digitalocean = {
       source  = "digitalocean/digitalocean"
-      version = "2.67.0"
+      version = "2.106.0"
     }
   }
 }

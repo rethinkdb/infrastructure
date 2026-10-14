@@ -39,3 +39,16 @@ Check the final plan and apply the changes:
 ```bash
 $ tofu apply
 ```
+
+## Checks
+
+Install [pre-commit](https://pre-commit.com) and enable the hooks:
+
+```bash
+$ pre-commit install
+```
+
+The hooks format Terraform, YAML, and Markdown, and they check YAML,
+GitHub Actions workflows, and the OpenTofu configuration. OpenTofu checks run
+`tofu fmt -recursive`, then `tofu init -backend=false` and `tofu validate`.
+Pull requests and merges to `main` run `tofu fmt -check` and `tofu validate`.

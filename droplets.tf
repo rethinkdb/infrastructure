@@ -1,76 +1,52 @@
 locals {
-  default_droplet_image = "ubuntu-24-04-x64"
-
   default_ssh_keys = [
     "04:78:a1:f2:ff:05:dc:73:4d:eb:7f:83:e3:b9:26:e2" # RethinkDB Shared SSH Key
   ]
 }
 
-resource "digitalocean_droplet" "download_server" {
-  name          = "rethinkdb-download-server"
-  image         = local.default_droplet_image
-  region        = var.digitalocean_region
-  size          = "s-2vcpu-4gb"
-  ssh_keys      = local.default_ssh_keys
-  droplet_agent = true
-  monitoring    = true
-  backups       = true
-  tags = [
-    "production",
-    "terraform-managed"
-  ]
+module "download_server" {
+  source = "./modules/droplet"
 
-  backup_policy {
+  name     = "rethinkdb-download-server"
+  region   = var.digitalocean_region
+  size     = "s-2vcpu-4gb"
+  ssh_keys = local.default_ssh_keys
+  backups  = true
+  tags     = ["production"]
+
+  backup_policy = {
     plan    = "weekly"
     weekday = "SUN"
     hour    = 12
   }
+
+  volumes = {
+    nexus = {
+      description = "Extra volume for the download server's blob store"
+      size        = 100
+      tags        = ["production"]
+    }
+  }
 }
 
-resource "digitalocean_volume" "download_server_blob_store" {
-  name                    = "nexus"
-  description             = "Extra volume for the download server's blob store"
-  region                  = var.digitalocean_region
-  initial_filesystem_type = "ext4"
-  size                    = 100
-  tags = [
-    "production",
-    "terraform-managed"
-  ]
+module "update_checker_server" {
+  source = "./modules/droplet"
+
+  name     = "rethinkdb-update-server"
+  region   = var.digitalocean_region
+  size     = "s-1vcpu-1gb"
+  ssh_keys = local.default_ssh_keys
+  tags     = ["production"]
 }
 
-resource "digitalocean_volume_attachment" "download_server_blob_store" {
-  droplet_id = digitalocean_droplet.download_server.id
-  volume_id  = digitalocean_volume.download_server_blob_store.id
-}
+module "private_github_runner" {
+  source = "./modules/droplet"
 
-resource "digitalocean_droplet" "update_checker_server" {
-  name          = "rethinkdb-update-server"
-  image         = local.default_droplet_image
-  region        = var.digitalocean_region
-  ssh_keys      = local.default_ssh_keys
-  size          = "s-1vcpu-1gb"
-  droplet_agent = true
-  monitoring    = true
-  backups       = false
-  tags = [
-    "production",
-    "terraform-managed"
-  ]
-}
+  count = var.private_github_runner_count
 
-resource "digitalocean_droplet" "private_github_runner" {
-  count         = var.private_github_runner_count
-  name          = "rethinkdb-private-github-runner-${count.index}"
-  image         = local.default_droplet_image
-  region        = var.digitalocean_region
-  ssh_keys      = local.default_ssh_keys
-  size          = "s-4vcpu-8gb"
-  droplet_agent = true
-  monitoring    = true
-  backups       = false
-  tags = [
-    "build-and-test",
-    "terraform-managed"
-  ]
+  name     = "rethinkdb-private-github-runner-${count.index}"
+  region   = var.digitalocean_region
+  size     = "s-4vcpu-8gb"
+  ssh_keys = local.default_ssh_keys
+  tags     = ["build-and-test"]
 }
