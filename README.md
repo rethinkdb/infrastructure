@@ -17,12 +17,16 @@ DNS provider.
 
 1. Create a new AWS profile in `~/.aws/credentials`, called `rethinkdb` with
    the DigitalOcean spaces access key ID and Secret access key.
-2. Create a new `secret.auto.tfvars` file to store your `digitalocean_token`.
-3. Execute the commands below.
+2. Create a `secret.auto.tfvars` file in each boundary directory to store
+   your `digitalocean_token`.
+3. Execute the commands below from the boundary you want to change.
+
+Production servers live in `terraform/boundaries/core-infra`. GitHub runners live in
+`terraform/boundaries/github`. Each directory has its own state.
 
 ### Usage
 
-Initialize the terraform state and select your workspace:
+Initialize the terraform state:
 
 ```bash
 $ tofu init
@@ -50,5 +54,5 @@ $ pre-commit install
 
 The hooks format Terraform, YAML, and Markdown, and they check YAML,
 GitHub Actions workflows, and the OpenTofu configuration. OpenTofu checks run
-`tofu fmt -recursive`, then `tofu init -backend=false` and `tofu validate`.
-Pull requests and merges to `main` run pre-commit.
+`tofu fmt -recursive`, then `tofu init -backend=false` and `tofu validate` in
+each boundary. Pull requests and merges to `main` run pre-commit.

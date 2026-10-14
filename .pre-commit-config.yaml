@@ -47,7 +47,7 @@ repos:
 
       - id: tofu-validate
         name: tofu validate
-        entry: bash -c 'tofu init -backend=false -input=false && tofu validate'
+        entry: bash -c 'set -euo pipefail; for root in terraform/boundaries/core-infra terraform/boundaries/github; do (cd "$root" && tofu init -backend=false -input=false && tofu validate); done'
         language: system
         pass_filenames: false
         types: [terraform]

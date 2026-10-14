@@ -5,7 +5,7 @@ locals {
 }
 
 module "download_server" {
-  source = "./modules/droplet"
+  source = "../../modules/droplet"
 
   name     = "rethinkdb-download-server"
   region   = var.digitalocean_region
@@ -30,23 +30,11 @@ module "download_server" {
 }
 
 module "update_checker_server" {
-  source = "./modules/droplet"
+  source = "../../modules/droplet"
 
   name     = "rethinkdb-update-server"
   region   = var.digitalocean_region
   size     = "s-1vcpu-1gb"
   ssh_keys = local.default_ssh_keys
   tags     = ["production"]
-}
-
-module "private_github_runner" {
-  source = "./modules/droplet"
-
-  count = var.private_github_runner_count
-
-  name     = "rethinkdb-private-github-runner-${count.index}"
-  region   = var.digitalocean_region
-  size     = "s-4vcpu-8gb"
-  ssh_keys = local.default_ssh_keys
-  tags     = ["build-and-test"]
 }
