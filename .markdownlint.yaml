@@ -1,0 +1,13 @@
+default: true
+
+# Command examples include a shell prompt and no sample output.
+MD014: false
+
+# Tables and terraform-docs type signatures exceed 80 columns.
+MD013: false
+
+# terraform-docs emits HTML anchors and preformatted type blocks.
+MD033: false
+
+# Generated module docs start at a second-level heading.
+MD041: false
