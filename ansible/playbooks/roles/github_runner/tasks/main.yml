@@ -18,7 +18,7 @@
     github_account: rethinkdb
     github_repo: rethinkdb
     access_token: "{{ GITHUB_RUNNER_TOKEN }}"
-    runner_name: "rethinkdb-runner-{{ ansible_facts.architecture }}"
+    runner_name: "rethinkdb-{{ inventory_hostname }}"
     runner_version: "{{ GITHUB_RUNNER_VERSION }}"
     runner_user: "{{ GITHUB_RUNNER_USER }}"
     runner_dir: "{{ GITHUB_RUNNER_DIRECTORY }}"

@@ -33,22 +33,21 @@
   notify:
     - Reload nginx
 
-- name: Reload nginx if required
-  ansible.builtin.meta: flush_handlers
-
 - name: Set up nginx to reverse-proxy
   ansible.builtin.template:
     src: nginx-proxy.j2
     dest: "{{ NGINX_PROXY_CONFIG_PATH }}"
     mode: "0644"
-  register: sites_available
+  notify:
+    - Reload nginx
 
 - name: Enable nginx site configuration
   ansible.builtin.file:
     src: "{{ NGINX_PROXY_CONFIG_PATH }}"
     dest: "/etc/nginx/sites-enabled/{{ NGINX_PROXY_CONFIG_PATH | basename }}"
     state: link
-  register: sites_enabled
+  notify:
+    - Reload nginx
 
 - name: Open public port on the firewall
   community.general.ufw:
@@ -56,16 +55,13 @@
     port: "{{ NGINX_PROXY_PUBLIC_PORT }}"
     proto: tcp
 
-- name: Reload nginx if necessary
-  when: (sites_available.changed or sites_enabled.changed) and NGINX_PROXY_RELOAD_NGINX
-  ansible.builtin.command: echo "reloading nginx"
-  changed_when: true
-  notify:
-    - Reload nginx
-
 - name: Harden nginx configuration
   ansible.builtin.import_role:
     name: devsec.hardening.nginx_hardening
   vars:
     nginx_limit_conn_zone: "{{ NGINX_LIMIT_CONN_ZONE }}"
     nginx_limit_conn: "{{ NGINX_LIMIT_CONN }}"
+
+- name: Check nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false

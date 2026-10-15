@@ -34,8 +34,9 @@ jobs:
         with:
           path: |
             ~/.cache/pre-commit
+            ~/.cache/ansible-syntax
             ${{ github.workspace }}/.opentofu-plugin-cache
-          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml', 'terraform/boundaries/core-infra/providers.tf', 'terraform/boundaries/github/providers.tf', 'terraform/modules/droplet/providers.tf') }}
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml', 'ansible/requirements.yaml', 'terraform/boundaries/core-infra/providers.tf', 'terraform/boundaries/github/providers.tf', 'terraform/modules/droplet/providers.tf') }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-
 

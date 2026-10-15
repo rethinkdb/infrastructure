@@ -8,7 +8,7 @@ LimitNOFILE=65536
 ExecStart={{ NEXUS_OSS_PATH }}/current/bin/nexus start
 ExecStop={{ NEXUS_OSS_PATH }}/current/bin/nexus stop
 User=nexus
-Restart=on-abort
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

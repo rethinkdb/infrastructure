@@ -21,13 +21,6 @@
     dest: /etc/hosts
     mode: "0544"
 
-- name: Update all packages to their latest version # noqa: package-latest
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 3600
-    name: "*"
-    state: latest
-
 - name: Install common dependencies
   ansible.builtin.apt:
     name:
@@ -35,13 +28,36 @@
       - git
       - python3
       - python3-pip
+      - unattended-upgrades
       - vim
     state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable unattended security upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
 
 - name: Install dependencies
   ansible.builtin.apt:
     name: "{{ COMMON_SERVER_DEPENDENCIES }}"
     state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Update all packages to their latest version # noqa: package-latest
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    name: "*"
+    state: latest
+  tags:
+    - never
+    - package-upgrade
 
 - name: Apply OS hardening
   ansible.builtin.import_role:
