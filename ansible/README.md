@@ -5,7 +5,7 @@ This directory contains ansible deployment scripts for deploying a variety of Re
 ## Getting Started
 
 1. Create a Python 3.12 virtualenv and install Python requirements, `pip install -r requirements.txt`.
-2. Install Ansible requirements, `ansible-galaxy install --force -r requirements.yml`.
+2. Install Ansible requirements, `ansible-galaxy install --force -r requirements.yaml`.
 3. Place the Ansible Vault password into a file named `.vault-pass`.
 4. Execute `ansible-playbook playbooks/<playbook>.yml -l <limit>`, where `<playbook>` is the service-specific playbook, and `<limit>` is a specific host or group from the [inventory.ini](inventory.ini) file.
 
