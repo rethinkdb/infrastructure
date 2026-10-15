@@ -1,0 +1,25 @@
+- name: Ensure the GitHub runner user exists
+  ansible.builtin.user:
+    name: "{{ GITHUB_RUNNER_USER }}"
+    shell: /bin/bash
+    state: present
+
+- name: Ensure the GitHub runner directory exists and is owned
+  ansible.builtin.file:
+    path: "{{ GITHUB_RUNNER_DIRECTORY }}"
+    state: directory
+    owner: "{{ GITHUB_RUNNER_USER }}"
+    mode: "0755"
+
+- name: Install GitHub runner
+  ansible.builtin.import_role:
+    name: monolithprojects.github_actions_runner
+  vars:
+    github_account: rethinkdb
+    github_repo: rethinkdb
+    access_token: "{{ GITHUB_RUNNER_TOKEN }}"
+    runner_name: "rethinkdb-{{ inventory_hostname }}"
+    runner_version: "{{ GITHUB_RUNNER_VERSION }}"
+    runner_user: "{{ GITHUB_RUNNER_USER }}"
+    runner_dir: "{{ GITHUB_RUNNER_DIRECTORY }}"
+    runner_labels: "{{ GITHUB_RUNNER_LABELS }}"

@@ -5,7 +5,7 @@ terraform {
     }
 
     bucket  = "terraform-158f917c-2c81-44f6-82dc-7982eb077ee1"
-    key     = "terraform.tfstate"
+    key     = "github-runners/terraform.tfstate"
     profile = "rethinkdb"
 
     # Deactivate a few AWS-specific checks
@@ -17,11 +17,10 @@ terraform {
     region                      = "us-east-1"
   }
 
-
   required_providers {
     digitalocean = {
       source  = "digitalocean/digitalocean"
-      version = "2.67.0"
+      version = "2.106.0"
     }
   }
 }

@@ -1,0 +1,55 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:best-practices", ":semanticCommits", ":enablePreCommit"],
+	"labels": ["dependencies"],
+	"prConcurrentLimit": 5,
+	"packageRules": [
+		{
+			"description": "Group GitHub Actions updates into one pull request.",
+			"matchManagers": ["github-actions"],
+			"groupName": "github-actions",
+			"automerge": true
+		},
+		{
+			"description": "Group pre-commit hook updates into one pull request.",
+			"matchManagers": ["pre-commit"],
+			"groupName": "pre-commit",
+			"automerge": true
+		},
+		{
+			"description": "Install OpenTofu providers from the OpenTofu registry and update them together.",
+			"matchDatasources": ["terraform-provider"],
+			"registryUrls": ["https://registry.opentofu.org"],
+			"groupName": "opentofu providers",
+			"automerge": true
+		},
+		{
+			"description": "Group Ansible Galaxy roles and collections into one pull request.",
+			"matchManagers": ["ansible-galaxy"],
+			"groupName": "ansible galaxy",
+			"automerge": true
+		},
+		{
+			"description": "Group Ansible Python packages, including the ansible-lint hook extra.",
+			"matchPackageNames": ["ansible", "ansible-core", "ansible-vault"],
+			"groupName": "ansible packages",
+			"automerge": true
+		}
+	],
+	"customManagers": [
+		{
+			"customType": "regex",
+			"description": "OpenTofu CLI version installed in CI.",
+			"managerFilePatterns": ["/^\\.github/workflows/pre-commit\\.yml$/"],
+			"matchStrings": ["tofu_version:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+			"depNameTemplate": "opentofu",
+			"packageNameTemplate": "opentofu/opentofu",
+			"datasourceTemplate": "github-releases",
+			"extractVersionTemplate": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
+		}
+	],
+	"vulnerabilityAlerts": {
+		"enabled": true,
+		"labels": ["dependencies", "security"]
+	}
+}

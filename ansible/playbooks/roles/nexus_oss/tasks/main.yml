@@ -1,0 +1,80 @@
+- name: Install java dependencies
+  ansible.builtin.apt:
+    name:
+      - openjdk-17-jdk
+
+- name: Ensure nexus user exists
+  ansible.builtin.user:
+    name: nexus
+    shell: /bin/bash
+    state: present
+
+- name: Ensure nexus path exists
+  ansible.builtin.file:
+    path: "{{ NEXUS_OSS_PATH }}"
+    state: directory
+    owner: nexus
+    mode: "0755"
+
+- name: Get nexus version stats
+  ansible.builtin.stat:
+    path: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}"
+  register: nexus_artifact
+
+- name: Download Nexus OSS
+  become: true
+  become_user: nexus
+  ansible.builtin.get_url:
+    url: "https://download.sonatype.com/nexus/3/nexus-{{ NEXUS_OSS_VERSION }}-linux-x86_64.tar.gz"
+    dest: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}-linux-x86_64.tar.gz"
+    checksum: "{{ NEXUS_OSS_CHECKSUM }}"
+    mode: "0644"
+  when: not nexus_artifact.stat.exists
+
+- name: Unarchive Nexus OSS
+  become: true
+  become_user: nexus
+  ansible.builtin.unarchive:
+    src: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}-linux-x86_64.tar.gz"
+    dest: "{{ NEXUS_OSS_PATH }}"
+    remote_src: true
+  when: not nexus_artifact.stat.exists
+  notify: Restart nexus
+
+- name: Remove Nexus OSS archive
+  ansible.builtin.file:
+    path: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}-linux-x86_64.tar.gz"
+    state: absent
+
+- name: Link the current nexus directory
+  ansible.builtin.file:
+    src: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}"
+    dest: "{{ NEXUS_OSS_PATH }}/current"
+    state: link
+    force: true
+    owner: nexus
+  notify: Restart nexus
+
+- name: Copy nexus.rc file
+  ansible.builtin.copy:
+    src: nexus.rc
+    dest: "{{ NEXUS_OSS_PATH }}/current/bin/nexus.rc"
+    owner: nexus
+    mode: "0644"
+  notify: Restart nexus
+
+- name: Render nexus.service file
+  ansible.builtin.template:
+    src: nexus.service.j2
+    dest: /etc/systemd/system/nexus.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart nexus
+
+- name: Ensure nexus service is running and enabled
+  ansible.builtin.systemd_service:
+    name: nexus
+    state: started
+    enabled: true
+    daemon_reload: true

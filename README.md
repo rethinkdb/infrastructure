@@ -1,41 +1,31 @@
 # Infrastructure
 
-This repository contains the Terraform resource definitions for the servers
-operated for RethinkDB. This includes the download and update checker servers.
+This repository manages RethinkDB servers on DigitalOcean. [OpenTofu](https://opentofu.org) creates the droplets. Ansible configures them. DNS stays with the DNS provider; this repository has no API access to it.
 
-The DNS records are not managed with Terraform as we have no API access for the
-DNS provider.
+| Service | Host | Where it is defined |
+| --- | --- | --- |
+| Package repository (Nexus OSS) | `download.rethinkdb.com` | `terraform/boundaries/core-infra`, `ansible/playbooks/nexus-oss-repository.yml` |
+| Update checker | `update.rethinkdb.com` | `terraform/boundaries/core-infra`, `ansible/playbooks/update-checker.yml` |
+| Private GitHub Actions runners | `github_runner` inventory group | `terraform/boundaries/github`, `ansible/playbooks/private-github-runner.yml` |
 
-## Getting started
+`ansible/playbooks/initial-access.yml` creates the `ubuntu` login user and installs SSH keys before the service playbooks run.
 
-### Prerequisites
+Tokens and the Ansible Vault password stay on the operator machine. `*.tfvars` and `ansible/.vault-pass` are not committed.
 
-- [Open Tofu](https://opentofu.org) cli
-- [DigitalOcean](https://digitalocean.com) access
+## Ansible
 
-### Setup
+Host configuration lives in [ansible/](ansible/README.md). Production secrets in that tree are Vault-encrypted. Install dependencies, place the Vault password, and run a playbook from the instructions there.
 
-1. Create a new AWS profile in `~/.aws/credentials`, called `rethinkdb` with
-   the DigitalOcean spaces access key ID and Secret access key.
-2. Create a new `secret.auto.tfvars` file to store your `digitalocean_token`.
-3. Execute the commands below.
+## Terraform
 
-### Usage
+Droplet definitions live in [terraform/](terraform/README.md) and are applied with OpenTofu. `boundaries/core-infra` holds the download and update servers. `boundaries/github` holds the private runners. Each boundary has its own state in DigitalOcean Spaces.
 
-Initialize the terraform state and select your workspace:
+## Checks
 
-```bash
-$ tofu init
-```
-
-See what plan would be executed:
+Install [pre-commit](https://pre-commit.com) and enable the hooks:
 
 ```bash
-$ tofu plan
+pre-commit install
 ```
 
-Check the final plan and apply the changes:
-
-```bash
-$ tofu apply
-```
+The hooks format Terraform, YAML, and Markdown, and they check YAML, GitHub Actions workflows, Ansible, and the OpenTofu configuration. OpenTofu checks run `tofu fmt -recursive`, then `tofu init -backend=false` and `tofu validate` in each boundary. Pull requests and pushes to `main` run the same hooks.

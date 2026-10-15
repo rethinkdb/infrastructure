@@ -1,0 +1,58 @@
+- name: Ensure server access is set up
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Require an explicit limit
+      ansible.builtin.assert:
+        that: ansible_limit is defined
+        fail_msg: Pass --limit so this playbook cannot target every host by accident.
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Require GitHub users for SSH access
+      ansible.builtin.assert:
+        that: COMMON_SSH_KEY_GITHUB_USERS | length > 0
+        fail_msg: COMMON_SSH_KEY_GITHUB_USERS is empty, so exclusive authorized keys would lock out ubuntu.
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Ensure login user exists
+      ansible.builtin.user:
+        name: ubuntu
+        shell: /bin/bash
+        state: present
+
+    - name: Ensure login user is member of sudoers
+      ansible.builtin.user:
+        name: ubuntu
+        groups: sudo
+        append: true
+
+    - name: Ensure passwordless sudo for the login user
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/90-ubuntu
+        content: "ubuntu ALL=(ALL) NOPASSWD:ALL\n"
+        mode: "0440"
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: Remove passwordless sudo from the main sudoers file
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        regexp: '^ubuntu\s'
+        state: absent
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: Collect GitHub SSH keys
+      ansible.builtin.set_fact:
+        common_ssh_keys: "{{ (common_ssh_keys | default([])) + (lookup('ansible.builtin.url', 'https://github.com/' + item + '.keys').splitlines() | reject('equalto', '') | list) }}"
+      loop: "{{ COMMON_SSH_KEY_GITHUB_USERS }}"
+
+    - name: Ensure up-to-date access SSH keys are from GitHub
+      ansible.posix.authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ common_ssh_keys | join('\n') }}"
+        exclusive: true

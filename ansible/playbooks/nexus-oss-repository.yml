@@ -1,0 +1,17 @@
+- name: Set up Nexus OSS repositories
+  hosts: package_repository
+  become: true
+  vars:
+    NGINX_LIMIT_CONN: "default 100"
+  roles:
+    - role: common
+      tags:
+        - common
+
+    - role: nexus_oss
+      tags:
+        - nexus-oss
+
+    - role: nginx_proxy
+      tags:
+        - nginx-proxy

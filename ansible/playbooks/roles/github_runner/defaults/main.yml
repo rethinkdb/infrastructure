@@ -1,0 +1,7 @@
+GITHUB_RUNNER_TOKEN: "{{ lookup('env', 'GITHUB_ACCESS_TOKEN') }}"
+GITHUB_RUNNER_VERSION: "2.338.0"
+GITHUB_RUNNER_USER: runner
+GITHUB_RUNNER_DIRECTORY: /opt/actions-runner
+GITHUB_RUNNER_LABELS:
+  - "pre-release"
+  - "rethinkdb-{{ ansible_facts.architecture }}"

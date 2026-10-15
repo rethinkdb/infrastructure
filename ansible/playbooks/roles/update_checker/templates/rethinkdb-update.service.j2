@@ -1,0 +1,16 @@
+[Unit]
+Description=RethinkDB update checker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=update-checker
+Group=update-checker
+WorkingDirectory={{ UPDATE_CHECKER_PATH }}
+ExecStart={{ UPDATE_CHECKER_PATH }}/venv/bin/python3 {{ UPDATE_CHECKER_PATH }}/app/update_server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
