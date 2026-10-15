@@ -43,3 +43,9 @@ terraform.rc
 .idea/
 .fleet/
 .vscode/
+
+# Ansible
+ansible/.vault-pass
+
+# Python
+ansible/.venv/
