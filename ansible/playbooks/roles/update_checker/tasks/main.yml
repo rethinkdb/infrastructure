@@ -1,0 +1,33 @@
+- name: Install python dependencies
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-dev
+      - python3-pip
+      - python3-virtualenv
+    state: present
+
+- name: Ensure update checker path exists
+  ansible.builtin.file:
+    path: "{{ UPDATE_CHECKER_PATH }}"
+    state: directory
+    mode: "0755"
+
+- name: Download update checker
+  ansible.builtin.git:
+    repo: "{{ UPDATE_CHECKER_REPO }}"
+    dest: "{{ UPDATE_CHECKER_PATH }}"
+    version: "{{ UPDATE_CHECKER_VERSION }}"
+
+- name: Install requirements
+  ansible.builtin.pip:
+    virtualenv: "{{ UPDATE_CHECKER_PATH }}/venv"
+    extra_args: --no-build-isolation
+    requirements: "{{ UPDATE_CHECKER_PATH }}/requirements.txt"
+
+- name: Start update checker
+  ansible.builtin.shell:
+    chdir: "{{ UPDATE_CHECKER_PATH }}"
+    cmd: |
+      ./venv/bin/python3 ./app/update_server.py >> ./logs/app.log 2>&1 &
+  changed_when: true

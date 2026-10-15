@@ -1,0 +1,71 @@
+- name: Install nginx and dependencies
+  ansible.builtin.apt:
+    name:
+      - nginx
+    state: present
+
+- name: Install and configure certbot
+  ansible.builtin.import_role:
+    name: geerlingguy.ansible-role-certbot
+  vars:
+    certbot_create_extra_args: ""
+    certbot_create_if_missing: true
+    certbot_create_standalone_stop_services:
+      - nginx
+    certbot_install_method: snap
+    certbot_admin_email: "{{ LETSENCRYPT_NOTIFY_EMAIL }}"
+    certbot_certs:
+      - domains:
+          - "{{ NGINX_PROXY_SERVER_NAME }}"
+
+- name: Disable nginx default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify:
+    - Reload nginx
+
+- name: Set up global nginx SSL settings
+  ansible.builtin.copy:
+    src: nginx-ssl
+    dest: /etc/nginx/conf.d/ssl.conf
+    mode: "0644"
+  notify:
+    - Reload nginx
+
+- name: Reload nginx if required
+  ansible.builtin.meta: flush_handlers
+
+- name: Set up nginx to reverse-proxy
+  ansible.builtin.template:
+    src: nginx-proxy.j2
+    dest: "{{ NGINX_PROXY_CONFIG_PATH }}"
+    mode: "0644"
+  register: sites_available
+
+- name: Enable nginx site configuration
+  ansible.builtin.file:
+    src: "{{ NGINX_PROXY_CONFIG_PATH }}"
+    dest: "/etc/nginx/sites-enabled/{{ NGINX_PROXY_CONFIG_PATH | basename }}"
+    state: link
+  register: sites_enabled
+
+- name: Open public port on the firewall
+  community.general.ufw:
+    rule: allow
+    port: "{{ NGINX_PROXY_PUBLIC_PORT }}"
+    proto: tcp
+
+- name: Reload nginx if necessary
+  when: (sites_available.changed or sites_enabled.changed) and NGINX_PROXY_RELOAD_NGINX
+  ansible.builtin.command: echo "reloading nginx"
+  changed_when: true
+  notify:
+    - Reload nginx
+
+- name: Harden nginx configuration
+  ansible.builtin.import_role:
+    name: devsec.hardening.nginx_hardening
+  vars:
+    nginx_limit_conn_zone: "{{ NGINX_LIMIT_CONN_ZONE }}"
+    nginx_limit_conn: "{{ NGINX_LIMIT_CONN }}"

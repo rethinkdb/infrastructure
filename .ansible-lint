@@ -1,0 +1,18 @@
+profile: production
+offline: true
+strict: true
+skip_list:
+  # Role and group variables use UPPER_SNAKE. Third-party role variables stay
+  # lowercase because those roles require those names.
+  - var-naming
+exclude_paths:
+  - .git
+  - .github
+  - terraform
+mock_roles:
+  - devsec.hardening.os_hardening
+  - devsec.hardening.ssh_hardening
+  - devsec.hardening.nginx_hardening
+  - geerlingguy.ansible-role-swap
+  - geerlingguy.ansible-role-certbot
+  - monolithprojects.github_actions_runner

@@ -1,0 +1,30 @@
+################################################################################
+# Hardening
+################################################################################
+
+# Do not ignore any accounts whose login should not be disabled.
+HARDENING_OS_IGNORE_USERS: []
+
+# If there are multiple users with UID=0 delete them, but keep root.
+HARDENING_OS_REMOVE_ADDITIONAL_ROOT_USERS: true
+
+# Set timeout in seconds for logout users automatically after.
+HARDENING_OS_SECURITY_AUTO_LOGOUT: 900
+
+# Set users allowed to ssh.
+HARDENING_SSH_ALLOW_USERS: ubuntu
+
+################################################################################
+# Common Linux Settings
+################################################################################
+
+# A general rule of thumb is to use twice the size of RAM if RAM is less than
+# 2 GB, or size of RAM plus 2 GB if RAM is more than 2 GB. Since we use nodes
+# with minimum of 1 GB, 2 GB is a good default.
+COMMON_SWAP_FILE_SIZE_MB: 2048
+
+COMMON_SERVER_HOSTNAME: "{{ inventory_hostname }}"
+
+COMMON_SERVER_DEPENDENCIES: []
+
+COMMON_SSH_KEY_GITHUB_USERS: []

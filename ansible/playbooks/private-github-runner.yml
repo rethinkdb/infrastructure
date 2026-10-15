@@ -1,0 +1,11 @@
+- name: Set up private GitHub runner
+  hosts: github_runner
+  become: true
+  roles:
+    - role: common
+      tags:
+        - common
+
+    - role: github_runner
+      tags:
+        - github-runner

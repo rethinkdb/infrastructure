@@ -1,0 +1,60 @@
+- name: Install java dependencies
+  ansible.builtin.apt:
+    name:
+      - openjdk-17-jdk
+
+- name: Ensure nexus user exists
+  ansible.builtin.user:
+    name: nexus
+    shell: /bin/bash
+    state: present
+
+- name: Ensure nexus path exists
+  ansible.builtin.file:
+    path: "{{ NEXUS_OSS_PATH }}"
+    state: directory
+    owner: nexus
+    mode: "0755"
+
+- name: Get nexus version stats
+  ansible.builtin.stat:
+    path: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}"
+  register: nexust_artifact
+
+- name: Download and unarchive nexus OSS
+  become: true
+  become_user: nexus
+  ansible.builtin.unarchive:
+    src: "https://download.sonatype.com/nexus/3/nexus-{{ NEXUS_OSS_VERSION }}-linux-x86_64.tar.gz"
+    dest: "{{ NEXUS_OSS_PATH }}"
+    remote_src: true
+  when: not nexust_artifact.stat.exists
+
+- name: Link the current nexus directory
+  ansible.builtin.file:
+    src: "{{ NEXUS_OSS_PATH }}/nexus-{{ NEXUS_OSS_VERSION }}"
+    dest: "{{ NEXUS_OSS_PATH }}/current"
+    state: link
+    force: true
+    owner: nexus
+
+- name: Copy nexus.rc file
+  ansible.builtin.copy:
+    src: nexus.rc
+    dest: "{{ NEXUS_OSS_PATH }}/current/bin/nexus.rc"
+    owner: nexus
+    mode: "0644"
+
+- name: Render nexus.service file
+  ansible.builtin.template:
+    src: nexus.service.j2
+    dest: /etc/systemd/system/nexus.service
+    owner: nexus
+    mode: "0644"
+
+- name: Ensure nexus service is running and enabled
+  ansible.builtin.systemd_service:
+    name: nexus
+    state: restarted
+    enabled: true
+    daemon_reload: true
