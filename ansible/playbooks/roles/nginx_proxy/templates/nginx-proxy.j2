@@ -7,7 +7,8 @@ server {
 {%- endif %}
 
 server {
-    listen 0.0.0.0:{{ NGINX_PROXY_PUBLIC_PORT }}{% if NGINX_PROXY_USE_SSL %} ssl http2{% endif %};
+    # HTTP/2 (http2) is disabled until Nginx 1.31.9 becomes available -- https://xint.io/blog/nginx2root-remote-code-execution
+    listen 0.0.0.0:{{ NGINX_PROXY_PUBLIC_PORT }}{% if NGINX_PROXY_USE_SSL %} ssl{% endif %};
     server_name {{ NGINX_PROXY_SERVER_NAME }};
 
     access_log {{ NGINX_PROXY_ACCESS_LOG }};
